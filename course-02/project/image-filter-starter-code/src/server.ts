@@ -1,7 +1,6 @@
-import express from 'express';
+import express, { Router, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
-
 (async () => {
 
   // Init the Express application
@@ -28,6 +27,20 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
   //   the filtered image file [!!TIP res.sendFile(filteredpath); might be useful]
 
   /**************************************************************************** */
+
+  app.get( "/filteredimage", async ( req: Request, res: Response ) => {
+    const image_url:string = req.query.image_url;
+    if(!image_url) { // just check if image_url exist and has value
+      return res.status(404).send("You need to send a public image_url valid!");
+    }
+    let fileImage: string;
+    try {   
+      fileImage = await filterImageFromURL(image_url);
+      res.sendFile(fileImage, ()=> {deleteLocalFiles([fileImage])});
+    } catch (e) {
+      res.status(422).send(e);
+    }
+  });
 
   //! END @TODO1
   
