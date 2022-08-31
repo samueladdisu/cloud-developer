@@ -1,6 +1,17 @@
 import express, { Router, Request, Response } from 'express';
 import bodyParser from 'body-parser';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+
+interface RequestParams {}
+
+interface ResponseBody {}
+
+interface RequestBody {}
+
+interface RequestQuery {
+  image_url: string;
+}
+
 (async () => {
 
   // Init the Express application
@@ -28,19 +39,40 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
 
   /**************************************************************************** */
 
-  app.get( "/filteredimage", async ( req: Request, res: Response ) => {
-    const image_url:string = req.query.image_url;
-    if(!image_url) { // just check if image_url exist and has value
-      return res.status(404).send("You need to send a public image_url valid!");
+  // app.get( "/filteredimage", async ( req: Request, res: Response ) => {
+  //   const image_url: string = req.query.image_url;
+  //   if(!image_url) { // just check if image_url exist and has value
+  //     return res.status(404).send("You need to send a public image_url valid!");
+  //   }
+  //   let fileImage: string;
+  //   try {   
+  //     fileImage = await filterImageFromURL(image_url);
+  //     res.sendFile(fileImage, ()=> {deleteLocalFiles([fileImage])});
+  //   } catch (e) {
+  //     res.status(422).send(e);
+  //   }
+  // });
+  // <RequestParams, ResponseBody, RequestBody, RequestQuery>
+
+  app.get("/filteredimage",async ( req: Request <RequestParams, ResponseBody, RequestBody, RequestQuery>, res: Response ) =>{
+
+    const { image_url } = req.query
+
+    
+    if(image_url == '' || !image_url){
+      return res.status(400).json({message: "Link is not valid"})
+    }else{
+      filterImageFromURL(image_url).then((result)=>{
+        res.status(200).sendFile(result, ()=>{
+          deleteLocalFiles([result])
+        })
+      }).catch((err)=>{
+          res.status(400).json({message: "error filtering"+ err +""})
+      })
     }
-    let fileImage: string;
-    try {   
-      fileImage = await filterImageFromURL(image_url);
-      res.sendFile(fileImage, ()=> {deleteLocalFiles([fileImage])});
-    } catch (e) {
-      res.status(422).send(e);
-    }
-  });
+
+
+  })
 
   //! END @TODO1
   
